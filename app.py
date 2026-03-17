@@ -769,6 +769,201 @@ def calculate_roi(budget: float, platform: str, objective: str,
     }
 
 
+
+# ── Trend Radar ───────────────────────────────────────────────────────────────
+def generate_trend_radar(industry: str, personality: str, company: str) -> dict:
+    """
+    Scan industry trends and generate brand-specific response strategies.
+    Returns structured trend data with actionable brand recommendations.
+    """
+    # Rich offline fallback — curated by industry
+    TRENDS = {
+        "Technology / Software": [
+            {"trend": "AI-Native Products", "momentum": 95, "direction": "↑",
+             "insight": "Users expect AI built-in, not bolted on. Position your brand as intelligence-first."},
+            {"trend": "Privacy-First Design", "momentum": 82, "direction": "↑",
+             "insight": "GDPR fatigue is shifting to trust marketing. Make privacy a feature, not a footnote."},
+            {"trend": "No-Code / Low-Code", "momentum": 78, "direction": "↑",
+             "insight": "Democratisation of tech is your opportunity to lead the 'accessible innovation' narrative."},
+            {"trend": "Subscription Fatigue", "momentum": 71, "direction": "↓",
+             "insight": "Offer transparent value bundling. Brands winning here lead with outcomes, not features."},
+        ],
+        "Fashion / Apparel": [
+            {"trend": "Slow Fashion Movement", "momentum": 88, "direction": "↑",
+             "insight": "Quality over quantity is the new luxury signal. Lead with craftsmanship and longevity."},
+            {"trend": "Digital Fashion / NFT Wearables", "momentum": 65, "direction": "↑",
+             "insight": "Early adopters are building digital wardrobes. A digital capsule collection could differentiate."},
+            {"trend": "Size Inclusivity", "momentum": 91, "direction": "↑",
+             "insight": "Inclusivity is no longer optional — it is a baseline brand expectation for Gen Z buyers."},
+            {"trend": "Fast Fashion Backlash", "momentum": 84, "direction": "↑",
+             "insight": "Transparency in supply chain is your biggest trust builder. Show your process."},
+        ],
+        "Food & Beverage": [
+            {"trend": "Functional Foods & Drinks", "momentum": 89, "direction": "↑",
+             "insight": "Consumers want food that does more — energy, immunity, mood. Lead with benefit-first messaging."},
+            {"trend": "Plant-Based Mainstream", "momentum": 85, "direction": "↑",
+             "insight": "Plant-based is no longer niche. Frame your brand in the 'better choices' conversation."},
+            {"trend": "Hyper-Local Sourcing", "momentum": 76, "direction": "↑",
+             "insight": "Local origin stories drive premium pricing. Your geography is a brand asset."},
+            {"trend": "Alcohol-Free Alternatives", "momentum": 80, "direction": "↑",
+             "insight": "'Mindful drinking' is a growth category. If relevant, stake your claim early."},
+        ],
+        "Healthcare": [
+            {"trend": "Preventive Health Tech", "momentum": 92, "direction": "↑",
+             "insight": "Consumers are shifting from reactive to proactive care. Lead with empowerment messaging."},
+            {"trend": "Mental Health Mainstreaming", "momentum": 94, "direction": "↑",
+             "insight": "Mental wellness is the fastest-growing health segment. Destigmatise in your brand language."},
+            {"trend": "Telehealth Normalisation", "momentum": 87, "direction": "↑",
+             "insight": "Digital-first healthcare is the expectation now. Position around accessibility and convenience."},
+            {"trend": "Wearable Health Data", "momentum": 79, "direction": "↑",
+             "insight": "Consumers own their health data. Build brand trust around data transparency."},
+        ],
+        "Finance": [
+            {"trend": "Embedded Finance", "momentum": 86, "direction": "↑",
+             "insight": "Finance is moving into every app. Position your brand around seamless integration."},
+            {"trend": "ESG Investing", "momentum": 83, "direction": "↑",
+             "insight": "Impact investing is mainstream. Lead with values alignment, not just returns."},
+            {"trend": "Gen Z Financial Literacy", "momentum": 88, "direction": "↑",
+             "insight": "The next generation wants education with their banking. Build a brand that teaches."},
+            {"trend": "Crypto & DeFi Maturity", "momentum": 68, "direction": "→",
+             "insight": "Volatility fatigue is real. Brands winning here lead with stability and education."},
+        ],
+        "Education": [
+            {"trend": "Micro-Credentials & Nano-Degrees", "momentum": 91, "direction": "↑",
+             "insight": "Short, stackable qualifications beat long degrees for working adults. Lead with speed-to-skill."},
+            {"trend": "AI Tutoring", "momentum": 93, "direction": "↑",
+             "insight": "Personalised learning at scale is the new standard. Position your brand as adaptive."},
+            {"trend": "Skills Gap Economy", "momentum": 89, "direction": "↑",
+             "insight": "Employers care about skills, not just degrees. Frame outcomes in career ROI language."},
+            {"trend": "Gamification Fatigue", "momentum": 62, "direction": "↓",
+             "insight": "Shallow gamification is losing trust. Go deeper — build genuine engagement loops."},
+        ],
+        "Retail / E-commerce": [
+            {"trend": "Social Commerce", "momentum": 92, "direction": "↑",
+             "insight": "TikTok Shop and Instagram checkout are changing where purchase decisions happen."},
+            {"trend": "Hyper-Personalisation", "momentum": 88, "direction": "↑",
+             "insight": "Generic recommendations are dead. Brand loyalty now requires 1:1 personalisation at scale."},
+            {"trend": "Recommerce / Resale", "momentum": 84, "direction": "↑",
+             "insight": "Secondary markets are a brand loyalty tool. Build a trade-in or resale programme."},
+            {"trend": "Same-Day Delivery Expectation", "momentum": 79, "direction": "↑",
+             "insight": "Speed is table stakes. Your brand story must include logistics transparency."},
+        ],
+        "Sustainability / Green Tech": [
+            {"trend": "Carbon Accountability", "momentum": 94, "direction": "↑",
+             "insight": "Carbon claims without data are liability. Lead with verified, third-party measurement."},
+            {"trend": "Green Hydrogen", "momentum": 71, "direction": "↑",
+             "insight": "Industrial decarbonisation is the next frontier. Early positioning here builds thought leadership."},
+            {"trend": "Circular Economy", "momentum": 87, "direction": "↑",
+             "insight": "End-of-life product thinking is becoming a purchase criterion for B2B buyers."},
+            {"trend": "Greenwashing Backlash", "momentum": 90, "direction": "↑",
+             "insight": "Vague eco-claims are now a legal and reputational risk. Specificity is your brand moat."},
+        ],
+    }
+
+    fallback_trends = TRENDS.get(industry, [
+        {"trend": "AI Integration", "momentum": 91, "direction": "↑",
+         "insight": "Every industry is being reshaped by AI. Lead with intelligent automation narrative."},
+        {"trend": "Experience Economy", "momentum": 85, "direction": "↑",
+         "insight": "Customers buy experiences, not just products. Invest in brand touchpoint design."},
+        {"trend": "Creator Economy", "momentum": 82, "direction": "↑",
+         "insight": "Micro-influencers outperform celebrities for authenticity. Build a creator partnership strategy."},
+        {"trend": "Community-Led Growth", "momentum": 80, "direction": "↑",
+         "insight": "The brands winning in 2026 are communities first, products second."},
+    ])
+
+    # Try Gemini for live, richer analysis
+    if st.session_state.gemini_ok:
+        prompt_tr = (
+            "Identify the top 4 industry trends for " + industry + " brands in 2026. "
+            "For each trend give: trend name, momentum score 0-100, direction as up/down/flat, "
+            "and a 1-sentence brand insight for a " + personality + " brand called " + company + ". "
+            "Return JSON array only. Each object must have keys: trend, momentum, direction, insight."
+        )
+        result = gemini_call(prompt_tr)
+        if result:
+            import json as _j, re as _r
+            try:
+                data = _j.loads(_r.sub(r"```json|```", "", result).strip())
+                if isinstance(data, list) and len(data) >= 3:
+                    return {"trends": data[:4], "source": "gemini", "industry": industry}
+            except Exception:
+                pass
+
+    return {"trends": fallback_trends, "source": "curated", "industry": industry}
+
+
+# ── Brand Launch Checklist ────────────────────────────────────────────────────
+def generate_launch_checklist(bi: dict) -> list:
+    """
+    Generate a personalised 30-step go-to-market brand launch checklist.
+    Tailored to company name, industry, platform, audience, and personality.
+    """
+    co   = bi.get("company",    "Your Brand")
+    ind  = bi.get("industry",   "your industry")
+    pers = bi.get("personality","Professional")
+    aud  = bi.get("audience",   "your target customers")
+    plat = bi.get("platform",   "Instagram")
+    tone = bi.get("tone",       "professional")
+
+    # Try Gemini first for fully personalised checklist
+    if st.session_state.gemini_ok:
+        prompt_cl = (
+            "Create a personalised 30-step brand launch checklist for " + co + ", "
+            "a " + pers.lower() + " brand in the " + ind + " industry targeting " + (aud or "modern consumers") + ". "
+            "Primary launch platform: " + (plat or "Instagram") + ". "
+            "Group steps into 5 phases: Foundation, Visual Identity, Digital Presence, Launch Week, Post-Launch. "
+            "Each step must be specific to this brand. "
+            "Return a JSON array only. Each object must have keys: phase, step (number), task, priority (high/medium/low), done (false)."
+        )
+        result = gemini_call(prompt_cl)
+        if result:
+            import json as _j, re as _r
+            try:
+                data = _j.loads(_r.sub(r"```json|```", "", result).strip())
+                if isinstance(data, list) and len(data) >= 15:
+                    return data
+            except Exception:
+                pass
+
+    # Rich offline fallback — personalised with f-strings
+    return [
+        # ── Phase 1: Foundation ──
+        {"phase": "Foundation",      "step": 1,  "task": f"Register {co} as a business entity and secure trademark for brand name", "priority": "high",   "done": False},
+        {"phase": "Foundation",      "step": 2,  "task": f"Purchase domain: {co.lower().replace(' ','-')}.com and relevant variants (.co, .io)", "priority": "high",   "done": False},
+        {"phase": "Foundation",      "step": 3,  "task": f"Define {co}'s mission statement, vision, and core values in writing", "priority": "high",   "done": False},
+        {"phase": "Foundation",      "step": 4,  "task": f"Map your target audience: create 2 detailed personas for {aud or 'your ideal customers'}", "priority": "high",   "done": False},
+        {"phase": "Foundation",      "step": 5,  "task": f"Conduct competitive analysis: identify top 5 competitors in {ind}", "priority": "high",   "done": False},
+        {"phase": "Foundation",      "step": 6,  "task": f"Define your unique value proposition — what makes {co} different in {ind.lower()}", "priority": "high",   "done": False},
+        # ── Phase 2: Visual Identity ──
+        {"phase": "Visual Identity", "step": 7,  "task": f"Finalise {co} logo (primary + secondary variants) from brand kit", "priority": "high",   "done": False},
+        {"phase": "Visual Identity", "step": 8,  "task": f"Lock in brand colour palette (primary: from your {pers.lower()} palette) and document hex codes", "priority": "high",   "done": False},
+        {"phase": "Visual Identity", "step": 9,  "task": "Set typography hierarchy: heading font, body font, accent font — document sizing rules", "priority": "high",   "done": False},
+        {"phase": "Visual Identity", "step": 10, "task": f"Create brand style guide PDF documenting {co}'s visual rules", "priority": "medium", "done": False},
+        {"phase": "Visual Identity", "step": 11, "task": f"Design branded business cards, letterhead, and email signature for {co}", "priority": "medium", "done": False},
+        {"phase": "Visual Identity", "step": 12, "task": f"Create {plat or 'social media'} profile picture, cover photo, and story highlight icons", "priority": "high",   "done": False},
+        # ── Phase 3: Digital Presence ──
+        {"phase": "Digital Presence","step": 13, "task": f"Launch {co} website with brand colours, typography, and logo — minimum 3 pages", "priority": "high",   "done": False},
+        {"phase": "Digital Presence","step": 14, "task": f"Set up Google Analytics 4 and Search Console for {co}.com", "priority": "medium", "done": False},
+        {"phase": "Digital Presence","step": 15, "task": f"Claim and set up {plat or 'social media'} business profile for {co}", "priority": "high",   "done": False},
+        {"phase": "Digital Presence","step": 16, "task": f"Write 10 SEO-optimised blog posts or landing pages targeting {ind.lower()} keywords", "priority": "medium", "done": False},
+        {"phase": "Digital Presence","step": 17, "task": f"Set up email marketing platform and create branded {co} email templates", "priority": "medium", "done": False},
+        {"phase": "Digital Presence","step": 18, "task": f"Create 30-day content calendar for {plat or 'social media'} launch", "priority": "high",   "done": False},
+        # ── Phase 4: Launch Week ──
+        {"phase": "Launch Week",     "step": 19, "task": f"Send launch announcement email to founding subscribers of {co}", "priority": "high",   "done": False},
+        {"phase": "Launch Week",     "step": 20, "task": f"Post launch content using your AI-generated tagline across all {plat or 'social'} channels", "priority": "high",   "done": False},
+        {"phase": "Launch Week",     "step": 21, "task": f"Reach out to 10 micro-influencers in {ind.lower()} for launch-week partnerships", "priority": "medium", "done": False},
+        {"phase": "Launch Week",     "step": 22, "task": f"Run paid launch campaign on {plat or 'Instagram'} with your campaign kit creative assets", "priority": "high",   "done": False},
+        {"phase": "Launch Week",     "step": 23, "task": f"Issue a press release announcing {co}'s launch to {ind.lower()} publications", "priority": "medium", "done": False},
+        {"phase": "Launch Week",     "step": 24, "task": f"Host a live Q&A or launch event (virtual or in-person) for {co}", "priority": "low",    "done": False},
+        # ── Phase 5: Post-Launch ──
+        {"phase": "Post-Launch",     "step": 25, "task": f"Monitor brand mentions and sentiment for {co} across social and news", "priority": "high",   "done": False},
+        {"phase": "Post-Launch",     "step": 26, "task": f"Run weekly KPI review: CTR, engagement, follower growth, website traffic for {co}", "priority": "high",   "done": False},
+        {"phase": "Post-Launch",     "step": 27, "task": f"Collect first 50 customer reviews and testimonials for {co}", "priority": "high",   "done": False},
+        {"phase": "Post-Launch",     "step": 28, "task": f"A/B test 2 tagline variants from your brand kit to see which resonates more", "priority": "medium", "done": False},
+        {"phase": "Post-Launch",     "step": 29, "task": f"Refine {co} brand messaging based on first 30 days of audience feedback", "priority": "medium", "done": False},
+        {"phase": "Post-Launch",     "step": 30, "task": f"Plan Month 2 campaign using KPI predictions from your BrandSphere Analytics dashboard", "priority": "medium", "done": False},
+    ]
+
 # ══════════════════════════════════════════════════════════════════════════════
 #  NAVBAR
 # ══════════════════════════════════════════════════════════════════════════════
@@ -835,6 +1030,8 @@ tabs = st.tabs([
     "🎬 Animation Preview",
     "🪄 Mockups & ROI",
     "🛠 AI Tools",
+    "📡 Trend Radar",
+    "✅ Launch Checklist",
     "⭐ Feedback",
     "📦 Download Kit",
 ])
@@ -1855,9 +2052,214 @@ with tabs[9]:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  TAB 10 — FEEDBACK
+#  TAB 10 — TREND RADAR
 # ══════════════════════════════════════════════════════════════════════════════
 with tabs[10]:
+    st.markdown('<p class="sec-label">AI Intelligence</p>', unsafe_allow_html=True)
+    st.markdown('<h2 class="sec-title">Industry <em>Trend Radar</em></h2>', unsafe_allow_html=True)
+    st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+
+    bi = st.session_state.brand_inputs or {}
+    ind_tr  = bi.get("industry",    "Technology / Software")
+    pers_tr = bi.get("personality", "Professional")
+    co_tr   = bi.get("company",     "Your Brand")
+
+    st.markdown(f"""
+    <div class="card">
+      <div class="card-title">What is Trend Radar?</div>
+      <div class="card-sub">
+        AI-powered scan of the top industry trends shaping <strong>{ind_tr}</strong> in 2026.
+        Each trend includes a momentum score and a specific brand strategy recommendation for <strong>{co_tr}</strong>.
+      </div>
+    </div>""", unsafe_allow_html=True)
+
+    if st.button("📡  Scan Industry Trends", key="trend_scan_btn"):
+        with st.spinner("Scanning trends for " + ind_tr + "…"):
+            trend_data = generate_trend_radar(ind_tr, pers_tr, co_tr)
+            st.session_state["trend_data"] = trend_data
+
+    if st.session_state.get("trend_data"):
+        td     = st.session_state["trend_data"]
+        trends = td["trends"]
+        source = td["source"]
+        st.caption(f"Source: {'Gemini AI — live analysis' if source=='gemini' else 'Curated intelligence database'}")
+
+        st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+        st.markdown('<p class="sec-label">Top Trends in ' + ind_tr + ' — 2026</p>', unsafe_allow_html=True)
+
+        for i, t in enumerate(trends):
+            momentum   = t.get("momentum", 75)
+            direction  = t.get("direction", "up")
+            arrow      = "↑" if "up" in str(direction).lower() else ("↓" if "down" in str(direction).lower() else "→")
+            bar_color  = "#3ECFB2" if momentum >= 80 else "#C9A84C" if momentum >= 60 else "#E05A5A"
+            border_col = "#C9A84C" if i == 0 else "var(--border)"
+
+            st.markdown(f"""
+            <div class="card" style="border-color:{border_col};margin-bottom:14px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+                <div>
+                  <span style="font-family:var(--font-mono);font-size:0.62rem;color:var(--accent);letter-spacing:0.1em">TREND {i+1}</span>
+                  <div style="font-family:var(--font-head);font-size:1.2rem;font-weight:600;color:var(--text)">{t.get("trend","Trend")}</div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font-family:var(--font-head);font-size:2rem;font-weight:700;color:{bar_color}">{arrow}</div>
+                  <div style="font-family:var(--font-mono);font-size:0.6rem;color:var(--muted)">MOMENTUM</div>
+                </div>
+              </div>
+              <div style="background:var(--surface2);border-radius:4px;height:8px;overflow:hidden;margin-bottom:12px">
+                <div style="width:{momentum}%;height:100%;background:{bar_color};border-radius:4px;transition:width 0.8s ease"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+                <span style="font-family:var(--font-mono);font-size:0.6rem;color:var(--muted)">MOMENTUM SCORE</span>
+                <span style="font-family:var(--font-mono);font-size:0.68rem;color:{bar_color};font-weight:700">{momentum}/100</span>
+              </div>
+              <div style="background:rgba(201,168,76,0.06);border-left:3px solid var(--accent);padding:12px 14px;border-radius:0 8px 8px 0">
+                <div style="font-family:var(--font-mono);font-size:0.56rem;color:var(--accent);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px">Brand Strategy for {co_tr}</div>
+                <div style="font-size:0.88rem;line-height:1.65;color:var(--text)">{t.get("insight","")}</div>
+              </div>
+            </div>""", unsafe_allow_html=True)
+
+        # Radar chart using plotly
+        st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+        st.markdown('<p class="sec-label">Momentum Visualisation</p>', unsafe_allow_html=True)
+        import plotly.graph_objects as go
+        trend_names  = [t.get("trend","")[:20] + ("…" if len(t.get("trend","")) > 20 else "") for t in trends]
+        trend_scores = [t.get("momentum", 75) for t in trends]
+        fig_tr = go.Figure()
+        fig_tr.add_trace(go.Bar(
+            x=trend_names, y=trend_scores,
+            marker_color=["#C9A84C" if s >= 80 else "#3ECFB2" if s >= 60 else "#E05A5A" for s in trend_scores],
+            text=[str(s) for s in trend_scores],
+            textposition="outside",
+        ))
+        fig_tr.update_layout(
+            paper_bgcolor="#141518", plot_bgcolor="#141518",
+            font_color="#F0EDE8", font_family="DM Sans",
+            height=280, margin=dict(t=20,b=20,l=20,r=20),
+            yaxis=dict(range=[0,100], gridcolor="#2A2C31"),
+            xaxis=dict(gridcolor="#2A2C31"),
+            title=dict(text="Industry Trend Momentum Scores", font_color="#C9A84C", font_size=13),
+        )
+        st.plotly_chart(fig_tr, width="stretch")
+
+        # Strategic summary
+        st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+        st.markdown('<p class="sec-label">Your Strategic Position</p>', unsafe_allow_html=True)
+        top_trend = max(trends, key=lambda x: x.get("momentum", 0))
+        st.markdown(f"""
+        <div class="card">
+          <p class="sec-label">Priority Action for {co_tr}</p>
+          <p style="font-family:var(--font-head);font-size:1.1rem;font-style:italic;color:var(--text);line-height:1.7">
+            "{top_trend.get('insight','')}"
+          </p>
+          <div style="margin-top:12px">
+            <span class="pill pill-a">Top Trend: {top_trend.get('trend','')}</span>
+            <span class="pill pill-g" style="margin-left:6px">Momentum: {top_trend.get('momentum',0)}/100</span>
+          </div>
+        </div>""", unsafe_allow_html=True)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  TAB 11 — LAUNCH CHECKLIST
+# ══════════════════════════════════════════════════════════════════════════════
+with tabs[11]:
+    st.markdown('<p class="sec-label">Go-To-Market</p>', unsafe_allow_html=True)
+    st.markdown('<h2 class="sec-title">Brand <em>Launch Checklist</em></h2>', unsafe_allow_html=True)
+    st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+
+    bi = st.session_state.brand_inputs or {}
+
+    st.markdown(f"""
+    <div class="card">
+      <div class="card-title">Personalised 30-Step Go-To-Market Plan</div>
+      <div class="card-sub">A tailored brand launch checklist built specifically for {bi.get("company","your brand")} — covering Foundation, Visual Identity, Digital Presence, Launch Week, and Post-Launch phases.</div>
+    </div>""", unsafe_allow_html=True)
+
+    if st.button("✅  Generate My Launch Checklist", key="checklist_gen_btn"):
+        if not bi:
+            st.warning("Complete Brand Inputs first to personalise your checklist.")
+        else:
+            with st.spinner("Building your personalised checklist…"):
+                checklist = generate_launch_checklist(bi)
+                st.session_state["launch_checklist"] = checklist
+
+    if "launch_checklist" not in st.session_state:
+        st.session_state["launch_checklist"] = []
+
+    if st.session_state["launch_checklist"]:
+        checklist = st.session_state["launch_checklist"]
+        done_count = sum(1 for t in checklist if t.get("done", False))
+        total      = len(checklist)
+        pct        = int(done_count / total * 100) if total > 0 else 0
+
+        # Progress bar
+        st.markdown(f"""
+        <div style="margin:16px 0 24px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="font-family:var(--font-mono);font-size:0.68rem;color:var(--muted)">LAUNCH PROGRESS — {done_count}/{total} STEPS</span>
+            <span style="font-family:var(--font-mono);font-size:0.72rem;color:var(--accent);font-weight:700">{pct}%</span>
+          </div>
+          <div class="prog-wrap" style="height:12px"><div class="prog-bar" style="width:{pct}%"></div></div>
+        </div>""", unsafe_allow_html=True)
+
+        # Group by phase
+        phases = ["Foundation", "Visual Identity", "Digital Presence", "Launch Week", "Post-Launch"]
+        phase_icons = {"Foundation":"🏗", "Visual Identity":"🎨", "Digital Presence":"🌐", "Launch Week":"🚀", "Post-Launch":"📈"}
+
+        for phase in phases:
+            phase_items = [t for t in checklist if t.get("phase","") == phase]
+            if not phase_items:
+                continue
+            phase_done = sum(1 for t in phase_items if t.get("done", False))
+            icon = phase_icons.get(phase, "✦")
+
+            with st.expander(f"{icon} {phase}  —  {phase_done}/{len(phase_items)} done", expanded=(phase == "Foundation")):
+                for i, task in enumerate(phase_items):
+                    priority = task.get("priority", "medium")
+                    p_color  = "#E05A5A" if priority == "high" else "#C9A84C" if priority == "medium" else "#7A7A85"
+                    done     = task.get("done", False)
+                    step_num = task.get("step", i+1)
+
+                    # Checkbox to mark done
+                    checked = st.checkbox(
+                        task.get("task",""),
+                        value=done,
+                        key=f"chk_{phase}_{step_num}",
+                    )
+                    # Update done state
+                    task["done"] = checked
+
+                    st.markdown(f"""
+                    <div style="display:flex;align-items:center;gap:8px;margin:-8px 0 10px 28px">
+                      <span style="font-family:var(--font-mono);font-size:0.55rem;color:{p_color};border:1px solid {p_color};padding:1px 7px;border-radius:10px;text-transform:uppercase">{priority}</span>
+                      <span style="font-family:var(--font-mono);font-size:0.52rem;color:var(--muted)">Step {step_num}</span>
+                    </div>""", unsafe_allow_html=True)
+
+        # Download checklist as text
+        st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+        checklist_txt = f"# {bi.get('company','Brand')} — Brand Launch Checklist\n\n"
+        for phase in phases:
+            items = [t for t in checklist if t.get("phase","") == phase]
+            if items:
+                checklist_txt += f"## {phase}\n"
+                for t in items:
+                    tick = "[x]" if t.get("done") else "[ ]"
+                    checklist_txt += f"{tick} Step {t.get('step','')}: {t.get('task','')} [{t.get('priority','')}]\n"
+                checklist_txt += "\n"
+
+        st.download_button(
+            "⬇ Download Checklist",
+            data=checklist_txt,
+            file_name=f"{bi.get('company','Brand').replace(' ','_')}_launch_checklist.txt",
+            mime="text/plain",
+            key="dl_checklist",
+        )
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  TAB 12 — FEEDBACK
+# ══════════════════════════════════════════════════════════════════════════════
+with tabs[12]:
     st.markdown('<p class="sec-label">Module 07 — Feedback Intelligence</p>', unsafe_allow_html=True)
     st.markdown('<h2 class="sec-title">Rate & <em>Refine</em></h2>', unsafe_allow_html=True)
     st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
@@ -1907,9 +2309,9 @@ with tabs[10]:
             st.plotly_chart(feedback_pie(df_log), width='stretch')
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  TAB 11 — DOWNLOAD KIT
+#  TAB 13 — DOWNLOAD KIT
 # ══════════════════════════════════════════════════════════════════════════════
-with tabs[11]:
+with tabs[13]:
     st.markdown('<p class="sec-label">Module 08 — Export Engine</p>', unsafe_allow_html=True)
     st.markdown('<h2 class="sec-title">Download Brand <em>Kit</em></h2>', unsafe_allow_html=True)
     st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
