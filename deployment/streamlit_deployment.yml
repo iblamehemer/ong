@@ -1,0 +1,6 @@
+# BrandSphere AI — Streamlit Cloud Deployment Config
+name: brandsphere-ai
+entrypoint: app.py
+python: "3.11"
+dependencies:
+  - requirements.txt
