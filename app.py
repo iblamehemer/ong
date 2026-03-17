@@ -254,24 +254,34 @@ def generate_campaign_content(bi, platform, region, objective):
     }
 
 def generate_brand_story(bi):
-    co, ind, tone, aud = (bi.get("company",""), bi.get("industry",""),
-                           bi.get("tone",""), bi.get("audience",""))
-    if st.session_state.gemini_ok:
-        return gemini_call(
-            f"Write a 110-word brand story for {co} in the {ind} industry. "
-            f"Tone: {tone}. Audience: {aud}. Write in second person. Be inspiring.",
-            system="You are a brand narrative writer. Be specific, not generic."
-        )
-    return (
-        f"{co} was built with one conviction: that great brands don't happen by accident — "
-        f"they are engineered with intention.\n\n"
-        f"In the competitive {ind.lower()} landscape, standing out requires more than a logo. "
-        f"It demands a voice that resonates, a visual identity that commands attention, "
-        f"and a message that converts.\n\n"
-        f"Your brand is your most valuable asset. At {co}, every design decision, "
-        f"every word, every colour choice is a deliberate act of strategic storytelling.\n\n"
-        f"This is your story. Tell it boldly."
+    co  = bi.get("company","Your Brand")
+    ind = bi.get("industry","your industry")
+    tone= bi.get("tone","professional")
+    aud = bi.get("audience","modern professionals")
+
+    # Always-ready fallback (shown when Gemini is off or returns empty)
+    fallback = (
+        co + " was built with one conviction: that great brands don't happen by accident — "
+        "they are engineered with intention.\n\n"
+        "In the competitive " + ind.lower() + " landscape, standing out requires more than a logo. "
+        "It demands a voice that resonates, a visual identity that commands attention, "
+        "and a message that converts.\n\n"
+        "Every design decision, every word, every colour choice is a deliberate act of "
+        "strategic storytelling. Built for " + (aud or "the people who matter most") + ".\n\n"
+        "This is " + co + ". This is your story. Tell it boldly."
     )
+
+    if st.session_state.gemini_ok:
+        result = gemini_call(
+            "Write a 110-word brand narrative for " + co + " in the " + ind + " industry. "
+            "Tone: " + tone + ". Target audience: " + (aud or "modern consumers") + ". "
+            "Write in second person ('Your brand...'). Be specific and inspiring.",
+            system="You are an expert brand narrative writer. Be vivid and specific, never generic."
+        )
+        if result and len(result) > 20:   # only use if we got real content
+            return result
+
+    return fallback  # always returns non-empty string
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  NEW FEATURE HELPERS
@@ -1206,7 +1216,19 @@ with tabs[4]:
             st.markdown('<p class="sec-label">Brand Narrative</p>', unsafe_allow_html=True)
             if st.button("📖  Generate Brand Story"):
                 with st.spinner("Writing…"):
-                    st.session_state.brand_story = generate_brand_story(bi)
+                    result = generate_brand_story(bi)
+                    if result:
+                        st.session_state.brand_story = result
+                    else:
+                        # Absolute last resort fallback
+                        co2 = bi.get("company","Brand")
+                        st.session_state.brand_story = (
+                            co2 + " exists to redefine what is possible in "
+                            + bi.get("industry","your industry").lower() + ". "
+                            "Built with intention, designed for impact, and crafted for the people who expect more. "
+                            "Every product, every interaction, every detail — made to matter. "
+                            "This is " + co2 + ". Welcome to the future of your brand."
+                        )
 
             if st.session_state.brand_story:
                 st.markdown(f"""
@@ -1527,60 +1549,6 @@ with tabs[8]:
     st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
 
     bi = st.session_state.brand_inputs
-
-    # ── SECTION A: Nano Banana Pro Logo Generator ────────────────────────────
-    st.markdown('<p class="sec-label">🍌 AI Logo Generator — Nano Banana Pro</p>', unsafe_allow_html=True)
-    st.markdown("""
-    <div class="card">
-      <div class="card-title">Nano Banana Pro Image Generation</div>
-      <div class="card-sub">Uses Google's Gemini image model to generate a real AI-rendered logo alongside your SVG concepts. Requires Gemini API key. Uses the <code>gemini-2.0-flash-preview-image-generation</code> model.</div>
-    </div>""", unsafe_allow_html=True)
-
-    nb_col1, nb_col2 = st.columns([1, 1], gap="large")
-    with nb_col1:
-        nb_style = st.selectbox("Logo Style Prompt", [
-            "Minimalist vector logo",
-            "Bold geometric mark",
-            "Luxury monogram",
-            "Modern wordmark",
-            "Abstract icon",
-        ], key="nb_style_1")
-        nb_bg = st.radio("Background", ["White", "Transparent (white)", "Brand Color"], horizontal=True, key="nb_bg")
-
-    with nb_col2:
-        st.markdown(f"""
-        <div class="card">
-          <p class="sec-label">What Nano Banana Pro generates</p>
-          <p style="font-size:0.84rem;color:var(--muted);line-height:1.65">
-            A real AI-rendered PNG logo based on your brand inputs, personality, and colour palette.
-            This complements the 5 SVG concepts with an AI-generated visual.<br><br>
-            <span style="color:var(--accent)">⚡ Requires Gemini API key</span>
-          </p>
-        </div>""", unsafe_allow_html=True)
-
-    if st.button("🍌  Generate with Nano Banana Pro"):
-        if not st.session_state.gemini_ok:
-            st.warning("Connect your Gemini API key to use Nano Banana Pro.")
-        elif not bi:
-            st.warning("Complete Brand Inputs first.")
-        else:
-            with st.spinner("Generating AI logo with Nano Banana Pro…"):
-                png = generate_logo_nano_banana(
-                    bi.get("company","Brand"),
-                    bi.get("industry","Technology"),
-                    bi.get("personality","Minimalist"),
-                    st.session_state.palette or {}
-                )
-            if png:
-                st.image(png, width=300, caption="Generated by Nano Banana Pro (Gemini)")
-                st.download_button("⬇ Download AI Logo PNG", data=png,
-                    file_name=f"{bi.get('company','brand')}_nb_logo.png", mime="image/png")
-                st.success("✅ Nano Banana Pro logo generated!")
-            else:
-                st.info("ℹ️ Nano Banana Pro image generation requires the Gemini 2.0 Flash image preview model. "
-                        "If unavailable in your region, the SVG logos in the Logo Studio tab are your brand assets.")
-
-    st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
 
     # ── SECTION B: Brand Mockup Generator ───────────────────────────────────
     st.markdown('<p class="sec-label">🖼 Brand Mockup Generator</p>', unsafe_allow_html=True)
